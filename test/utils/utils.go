@@ -2,7 +2,6 @@ package utils
 
 import (
 	"crypto"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
@@ -18,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	protoTm "github.com/blockfint/benchmark-tm/protos/tendermint"
+	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/common"
 )
 
@@ -57,11 +56,14 @@ func CreateSignatureAndNonce(fnName string, paramJSON []byte, privKey *rsa.Priva
 	newhash := crypto.SHA256
 	pssh := newhash.New()
 	pssh.Write(PSSmessage)
-	hashed := pssh.Sum(nil)
-	signature, err := rsa.SignPKCS1v15(rand.Reader, privKey, newhash, hashed)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	// hashed := pssh.Sum(nil)
+	// Bypass signature
+	signature = []byte("AAA")
+	// signature, err := rsa.SignPKCS1v15(rand.Reader, privKey, newhash, hashed)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// }
+
 	return nonce, signature
 }
 

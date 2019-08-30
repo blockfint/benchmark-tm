@@ -34,9 +34,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/blockfint/benchmark-tm/abci/code"
 	"github.com/blockfint/benchmark-tm/protos/data"
+	"github.com/golang/protobuf/proto"
 	"github.com/tendermint/tendermint/abci/types"
 )
 
@@ -216,10 +216,10 @@ func (app *DIDApplication) CheckTxRouter(method string, param string, nonce []by
 		}
 	}
 
-	verifyResult, err := verifySignature(param, nonce, signature, publicKey, method)
-	if err != nil || verifyResult == false {
-		return ReturnCheckTx(code.VerifySignatureError, err.Error())
-	}
+	// verifyResult, err := verifySignature(param, nonce, signature, publicKey, method)
+	// if err != nil || verifyResult == false {
+	// 	return ReturnCheckTx(code.VerifySignatureError, err.Error())
+	// }
 
 	var result types.ResponseCheckTx
 	result = app.callCheckTx(method, param, nodeID)
