@@ -26,12 +26,13 @@ import (
 	"crypto"
 	"crypto/dsa"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	"encoding/asn1"
 	"fmt"
 	"math/big"
 	"strings"
@@ -83,14 +84,11 @@ func verifySignature(param string, nonce []byte, signature []byte, publicKey str
 	tempPSSmessage = append(tempPSSmessage, []byte(nonce)...)
 	PSSmessage := []byte(base64.StdEncoding.EncodeToString(tempPSSmessage))
 
-	// Hash the message
-	newhash := crypto.SHA256
-	pssh := newhash.New()
-	pssh.Write(PSSmessage)
-	hashed := pssh.Sum(nil)
-
 	switch pubKey := senderPublicKeyInterface.(type) {
 	case *ecdsa.PublicKey:
+		// Hash the message
+		hashed, _ := createHash(PSSmessage)
+
 		var signVal SignValues
 		_, err = asn1.Unmarshal(signature, &signVal)
 		if err != nil {
@@ -99,8 +97,14 @@ func verifySignature(param string, nonce []byte, signature []byte, publicKey str
 
 		return ecdsa.Verify(pubKey, hashed, signVal.R, signVal.S), nil
 	case *rsa.PublicKey:
+		// Hash the message
+		hashed, newhash := createHash(PSSmessage)
+
 		err = rsa.VerifyPKCS1v15(pubKey, newhash, hashed, signature)
 		return err == nil, err
+	case ed25519.PublicKey:
+		valid := ed25519.Verify(pubKey, PSSmessage, signature)
+		return valid, nil
 	}
 
 	return false, fmt.Errorf("Unsupported keytype")
@@ -151,7 +155,18 @@ func (app *DIDApplication) getPublicKeyFromNodeID(nodeID string) string {
 	return nodeDetail.PublicKey
 }
 
+func createHash(message []byte) (hashResult []byte, algorithm crypto.Hash) {
+
+	newhash := crypto.SHA256
+	pssh := newhash.New()
+	pssh.Write(message)
+	hashed := pssh.Sum(nil)
+
+	return hashed, newhash
+}
+
 func checkPubKey(key string) (returnCode uint32, log string) {
+
 	block, _ := pem.Decode([]byte(key))
 	if block == nil {
 		return code.InvalidKeyFormat, "Invalid key format. Cannot decode PEM."
@@ -168,6 +183,8 @@ func checkPubKey(key string) (returnCode uint32, log string) {
 			return code.RSAKeyLengthTooShort, "RSA key length is too short. Must be at least 2048-bit."
 		}
 	case *ecdsa.PublicKey:
+		return code.OK, ""
+	case ed25519.PublicKey:
 		return code.OK, ""
 	case *dsa.PublicKey:
 		return code.UnsupportedKeyType, "Unsupported key type. Only RSA is allowed."
