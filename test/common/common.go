@@ -29,8 +29,8 @@ import (
 	"fmt"
 
 	client "github.com/tendermint/tendermint/rpc/client"
-	"github.com/wesraph/benchmark-tm/abci/did/v1"
-	"github.com/wesraph/benchmark-tm/test/utils"
+	"github.com/blockfint/benchmark-tm/abci/did/v1"
+	"github.com/blockfint/benchmark-tm/test/utils"
 )
 
 const (

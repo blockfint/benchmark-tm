@@ -7,10 +7,10 @@ import (
 	"time"
 
 	client "github.com/tendermint/tendermint/rpc/client"
-	"github.com/wesraph/benchmark-tm/abci/did/v1"
-	"github.com/wesraph/benchmark-tm/test/common"
-	"github.com/wesraph/benchmark-tm/test/data"
-	"github.com/wesraph/benchmark-tm/test/utils"
+	"github.com/blockfint/benchmark-tm/abci/did/v1"
+	"github.com/blockfint/benchmark-tm/test/common"
+	"github.com/blockfint/benchmark-tm/test/data"
+	"github.com/blockfint/benchmark-tm/test/utils"
 )
 
 func TestRegisterMasterNodeEcdsa(t *testing.T) {

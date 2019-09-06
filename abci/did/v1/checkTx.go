@@ -39,8 +39,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/tendermint/tendermint/abci/types"
-	"github.com/wesraph/benchmark-tm/abci/code"
-	"github.com/wesraph/benchmark-tm/protos/data"
+	"github.com/blockfint/benchmark-tm/abci/code"
+	"github.com/blockfint/benchmark-tm/protos/data"
 )
 
 var IsMethod = map[string]bool{

@@ -24,7 +24,7 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 	client "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	protoTm "github.com/wesraph/benchmark-tm/protos/tendermint"
+	protoTm "github.com/blockfint/benchmark-tm/protos/tendermint"
 )
 
 var TendermintAddr = GetEnv("TENDERMINT_ADDRESS", "http://localhost:45000")
