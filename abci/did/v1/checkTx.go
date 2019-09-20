@@ -37,10 +37,10 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/tendermint/tendermint/abci/types"
 	"github.com/blockfint/benchmark-tm/abci/code"
 	"github.com/blockfint/benchmark-tm/protos/data"
+	"github.com/golang/protobuf/proto"
+	"github.com/tendermint/tendermint/abci/types"
 )
 
 var IsMethod = map[string]bool{
@@ -116,6 +116,22 @@ func ReturnCheckTx(code uint32, log string) types.ResponseCheckTx {
 		Code: code,
 		Log:  fmt.Sprintf(log),
 	}
+}
+
+func (app *DIDApplication) getNodePublicKeyForSignatureVerification(method string, param string, nodeID string) (string, uint32, string) {
+	var publicKey string
+	if method == "RegisterMasterNode" {
+		publicKey = getPublicKeyRegisterMasterNode(param)
+		if publicKey == "" {
+			return publicKey, code.CannotGetPublicKeyFromParam, "Can not get public key from parameter"
+		}
+	} else {
+		publicKey = app.getPublicKeyFromNodeID(nodeID)
+		if publicKey == "" {
+			return publicKey, code.CannotGetPublicKeyFromNodeID, "Can not get public key from node ID"
+		}
+	}
+	return publicKey, code.OK, ""
 }
 
 func getPublicKeyRegisterMasterNode(param string) string {
@@ -239,31 +255,12 @@ func checkAccessorPubKey(param string) (returnCode uint32, log string) {
 
 // CheckTxRouter is Pointer to function
 func (app *DIDApplication) CheckTxRouter(method string, param string, nonce []byte, signature []byte, nodeID string) types.ResponseCheckTx {
-
-	var publicKey string
-	if method == "RegisterMasterNode" {
-		publicKey = getPublicKeyRegisterMasterNode(param)
-		if publicKey == "" {
-			return ReturnCheckTx(code.CannotGetPublicKeyFromParam, "Can not get public key from parameter")
-		}
-	} else {
-		publicKey = app.getPublicKeyFromNodeID(nodeID)
-		if publicKey == "" {
-			return ReturnCheckTx(code.CannotGetPublicKeyFromNodeID, "Can not get public key from node ID")
-		}
-	}
-
 	// Check pub key
 	if method == "RegisterMasterNode" {
 		checkCode, log := checkNodePubKeys(param)
 		if checkCode != code.OK {
 			return ReturnCheckTx(checkCode, log)
 		}
-	}
-
-	verifyResult, err := verifySignature(param, nonce, signature, publicKey, method)
-	if err != nil || verifyResult == false {
-		return ReturnCheckTx(code.VerifySignatureError, err.Error())
 	}
 
 	var result types.ResponseCheckTx
