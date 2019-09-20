@@ -6,13 +6,7 @@
     git clone https://github.com/wesraph/benchmark-tm
     ```
 
-2.  Install dependency
-
-    ```sh
-    dep ensure
-    ```
-
-3.  Run via shell script (For development)
+2.  Run via shell script (For development)
 
     ```sh
     ./run.sh
