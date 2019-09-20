@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -93,15 +94,14 @@ func CreateSignatureAndNonceEcdsa(fnName string, paramJSON []byte, privKey *ecds
 	}
 
 	type SignValues struct {
-		R BigInt
-		S BigInt
+		R, S *big.Int
 	}
 
 	var encBigInt SignValues
-	encBigInt.R.Int = *r
-	encBigInt.S.Int = *s
+	encBigInt.R = r
+	encBigInt.S = s
 
-	signature, err := json.Marshal(encBigInt)
+	signature, err := asn1.Marshal(encBigInt)
 	if err != nil {
 		panic(err)
 	}
