@@ -126,10 +126,11 @@ func verifySignature(ch chan verifySignatureRetChan, param string, nonce []byte,
 			valid: valid,
 			err:   nil,
 		}
-	}
-	ch <- verifySignatureRetChan{
-		valid: false,
-		err:   fmt.Errorf("Unsupported keytype"),
+	default:
+		ch <- verifySignatureRetChan{
+			valid: false,
+			err:   fmt.Errorf("Unsupported keytype"),
+		}
 	}
 }
 
