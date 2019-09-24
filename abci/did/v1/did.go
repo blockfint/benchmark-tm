@@ -218,11 +218,14 @@ func (app *DIDApplication) DeliverTx(tx []byte) (res types.ResponseDeliverTx) {
 			}
 		} else {
 			app.logger.Debugf("Verified signature could not be found, re-verifying signature")
-			verifyResult, err := verifySignature(param, nonce, signature, publicKey, method)
-			if err != nil {
+			ch := make(chan verifySignatureRetChan)
+			go verifySignature(ch, param, nonce, signature, publicKey, method)
+			verifySignatureRet := <-ch
+			close(ch)
+			if verifySignatureRet.err != nil {
 				return app.ReturnDeliverTxLog(code.VerifySignatureError, err.Error(), "")
 			}
-			if verifyResult == false {
+			if verifySignatureRet.valid == false {
 				return app.ReturnDeliverTxLog(code.VerifySignatureError, "Invalid signature", "")
 			}
 		}
@@ -307,11 +310,14 @@ func (app *DIDApplication) CheckTx(tx []byte) (res types.ResponseCheckTx) {
 				return ReturnCheckTx(retCode, retLog)
 			}
 
-			verifyResult, err := verifySignature(param, nonce, signature, publicKey, method)
-			if err != nil {
+			ch := make(chan verifySignatureRetChan)
+			go verifySignature(ch, param, nonce, signature, publicKey, method)
+			verifySignatureRet := <-ch
+			close(ch)
+			if verifySignatureRet.err != nil {
 				return ReturnCheckTx(code.VerifySignatureError, err.Error())
 			}
-			if verifyResult == false {
+			if verifySignatureRet.valid == false {
 				return ReturnCheckTx(code.VerifySignatureError, "Invalid signature")
 			}
 			app.verifiedSignatures[string(signature)] = nodeID

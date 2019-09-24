@@ -67,7 +67,12 @@ func (app *DIDApplication) checkCanSetTx(param string, nodeID string) types.Resp
 	return ReturnCheckTx(code.OK, "")
 }
 
-func verifySignature(param string, nonce []byte, signature []byte, publicKey string, method string) (result bool, err error) {
+type verifySignatureRetChan struct {
+	valid bool
+	err   error
+}
+
+func verifySignature(ch chan verifySignatureRetChan, param string, nonce []byte, signature []byte, publicKey string, method string) {
 	// Get the certificate
 	publicKey = strings.Replace(publicKey, "\t", "", -1)
 	block, _ := pem.Decode([]byte(publicKey))
@@ -76,7 +81,10 @@ func verifySignature(param string, nonce []byte, signature []byte, publicKey str
 	senderPublicKeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 	//senderPublicKey := senderPublicKeyInterface.(*ecdsa.PublicKey)
 	if err != nil {
-		return false, err
+		ch <- verifySignatureRetChan{
+			valid: false,
+			err:   err,
+		}
 	}
 
 	// Build the message and encode to base64
@@ -92,22 +100,37 @@ func verifySignature(param string, nonce []byte, signature []byte, publicKey str
 		var signVal SignValues
 		_, err = asn1.Unmarshal(signature, &signVal)
 		if err != nil {
-			return false, nil
+			ch <- verifySignatureRetChan{
+				valid: false,
+				err:   err,
+			}
 		}
 
-		return ecdsa.Verify(pubKey, hashed, signVal.R, signVal.S), nil
+		valid := ecdsa.Verify(pubKey, hashed, signVal.R, signVal.S)
+		ch <- verifySignatureRetChan{
+			valid: valid,
+			err:   nil,
+		}
 	case *rsa.PublicKey:
 		// Hash the message
 		hashed, newhash := createHash(PSSmessage)
 
 		err = rsa.VerifyPKCS1v15(pubKey, newhash, hashed, signature)
-		return err == nil, err
+		ch <- verifySignatureRetChan{
+			valid: err == nil,
+			err:   err,
+		}
 	case ed25519.PublicKey:
 		valid := ed25519.Verify(pubKey, PSSmessage, signature)
-		return valid, nil
+		ch <- verifySignatureRetChan{
+			valid: valid,
+			err:   nil,
+		}
 	}
-
-	return false, fmt.Errorf("Unsupported keytype")
+	ch <- verifySignatureRetChan{
+		valid: false,
+		err:   fmt.Errorf("Unsupported keytype"),
+	}
 }
 
 // ReturnCheckTx return types.ResponseDeliverTx
