@@ -33,45 +33,57 @@ import (
 
 // app.ReturnDeliverTxLog return types.ResponseDeliverTx
 func (app *DIDApplication) ReturnDeliverTxLog(code uint32, log string, extraData string) types.ResponseDeliverTx {
-	var tags []cmn.KVPair
+	var attributes []cmn.KVPair
 	if code == 0 {
-		var tag cmn.KVPair
-		tag.Key = []byte("success")
-		tag.Value = []byte("true")
-		tags = append(tags, tag)
+		var attribute cmn.KVPair
+		attribute.Key = []byte("success")
+		attribute.Value = []byte("true")
+		attributes = append(attributes, attribute)
 	} else {
-		var tag cmn.KVPair
-		tag.Key = []byte("success")
-		tag.Value = []byte("false")
-		tags = append(tags, tag)
+		var attribute cmn.KVPair
+		attribute.Key = []byte("success")
+		attribute.Value = []byte("false")
+		attributes = append(attributes, attribute)
 	}
+	var events []types.Event
+	event := types.Event{
+		Type:       "did.result",
+		Attributes: attributes,
+	}
+	events = append(events, event)
 	return types.ResponseDeliverTx{
-		Code: code,
-		Log:  fmt.Sprintf(log),
-		Data: []byte(extraData),
-		Tags: tags,
+		Code:   code,
+		Log:    fmt.Sprintf(log),
+		Data:   []byte(extraData),
+		Events: events,
 	}
 }
 
-func (app *DIDApplication) ReturnDeliverTxLogWitgTag(code uint32, log string, specialTag []cmn.KVPair) types.ResponseDeliverTx {
-	var tags []cmn.KVPair
+func (app *DIDApplication) ReturnDeliverTxLogWithAttributes(code uint32, log string, additionalAttributes []cmn.KVPair) types.ResponseDeliverTx {
+	var attributes []cmn.KVPair
 	if code == 0 {
-		var tag cmn.KVPair
-		tag.Key = []byte("success")
-		tag.Value = []byte("true")
-		tags = append(tags, tag)
+		var attribute cmn.KVPair
+		attribute.Key = []byte("success")
+		attribute.Value = []byte("true")
+		attributes = append(attributes, attribute)
 	} else {
-		var tag cmn.KVPair
-		tag.Key = []byte("success")
-		tag.Value = []byte("false")
-		tags = append(tags, tag)
+		var attribute cmn.KVPair
+		attribute.Key = []byte("success")
+		attribute.Value = []byte("false")
+		attributes = append(attributes, attribute)
 	}
-	tags = append(tags, specialTag...)
+	attributes = append(attributes, additionalAttributes...)
+	var events []types.Event
+	event := types.Event{
+		Type:       "did.result",
+		Attributes: attributes,
+	}
+	events = append(events, event)
 	return types.ResponseDeliverTx{
-		Code: code,
-		Log:  fmt.Sprintf(log),
-		Data: []byte(""),
-		Tags: tags,
+		Code:   code,
+		Log:    fmt.Sprintf(log),
+		Data:   []byte(""),
+		Events: events,
 	}
 }
 

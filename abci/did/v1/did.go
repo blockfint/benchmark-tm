@@ -39,7 +39,7 @@ import (
 	"github.com/tendermint/tendermint/abci/types"
 
 	protoTm "github.com/blockfint/benchmark-tm/protos/tendermint"
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 )
 
 var (
@@ -166,7 +166,7 @@ func (app *DIDApplication) EndBlock(req types.RequestEndBlock) types.ResponseEnd
 	return types.ResponseEndBlock{ValidatorUpdates: valUpdates}
 }
 
-func (app *DIDApplication) DeliverTx(tx []byte) (res types.ResponseDeliverTx) {
+func (app *DIDApplication) DeliverTx(req types.RequestDeliverTx) (res types.ResponseDeliverTx) {
 
 	// Recover when panic
 	defer func() {
@@ -177,7 +177,7 @@ func (app *DIDApplication) DeliverTx(tx []byte) (res types.ResponseDeliverTx) {
 	}()
 
 	var txObj protoTm.Tx
-	err := proto.Unmarshal(tx, &txObj)
+	err := proto.Unmarshal(req.Tx, &txObj)
 	if err != nil {
 		app.logger.Error(err.Error())
 	}
@@ -228,7 +228,12 @@ func (app *DIDApplication) DeliverTx(tx []byte) (res types.ResponseDeliverTx) {
 		}
 
 		result := app.DeliverTxRouter(method, param, nonce, signature, nodeID)
-		app.logger.Infof(`DeliverTx response: {"code":%d,"log":"%s","tags":[{"key":"%s","value":"%s"}]}`, result.Code, result.Log, string(result.Tags[0].Key), string(result.Tags[0].Value))
+		app.logger.Infof(
+			`DeliverTx response: {"code":%d,"log":"%s","attributes":[{"key":"%s","value":"%s"}]}`,
+			result.Code,
+			result.Log,
+			string(result.Events[0].Attributes[0].Key), string(result.Events[0].Attributes[0].Value),
+		)
 		go recordDeliverTxDurationMetrics(startTime, method)
 		if result.Code != code.OK {
 			go recordDeliverTxFailMetrics(method)
@@ -240,7 +245,7 @@ func (app *DIDApplication) DeliverTx(tx []byte) (res types.ResponseDeliverTx) {
 	return app.ReturnDeliverTxLog(code.MethodCanNotBeEmpty, "method can not be empty", "")
 }
 
-func (app *DIDApplication) CheckTx(tx []byte) (res types.ResponseCheckTx) {
+func (app *DIDApplication) CheckTx(req types.RequestCheckTx) (res types.ResponseCheckTx) {
 	// Recover when panic
 	defer func() {
 		if r := recover(); r != nil {
@@ -250,7 +255,7 @@ func (app *DIDApplication) CheckTx(tx []byte) (res types.ResponseCheckTx) {
 	}()
 
 	var txObj protoTm.Tx
-	err := proto.Unmarshal(tx, &txObj)
+	err := proto.Unmarshal(req.Tx, &txObj)
 	if err != nil {
 		app.logger.Error(err.Error())
 	}

@@ -31,10 +31,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 )
 
-var _ types.Application = (*DIDApplicationInterface)(nil)
+// var _ types.Application = (*DIDApplicationInterface)(nil)
 
 type DIDApplicationInterface struct {
 	appV1 *didV1.DIDApplication
@@ -45,7 +45,7 @@ type DIDApplicationInterface struct {
 func NewDIDApplicationInterface() *DIDApplicationInterface {
 	logger := logrus.WithFields(logrus.Fields{"module": "abci-app"})
 
-	var dbType = getEnv("ABCI_DB_TYPE", "leveldb")
+	var dbType = getEnv("ABCI_DB_TYPE", "goleveldb")
 	var dbDir = getEnv("ABCI_DB_DIR_PATH", "./DID")
 
 	if err := cmn.EnsureDir(dbDir, 0700); err != nil {
@@ -70,21 +70,21 @@ func (app *DIDApplicationInterface) SetOption(req types.RequestSetOption) types.
 	return app.appV1.SetOption(req)
 }
 
-func (app *DIDApplicationInterface) CheckTx(tx []byte) types.ResponseCheckTx {
+func (app *DIDApplicationInterface) CheckTx(req types.RequestCheckTx) types.ResponseCheckTx {
 	switch {
 	case app.CurrentBlock >= 0:
-		return app.appV1.CheckTx(tx)
+		return app.appV1.CheckTx(req)
 	default:
-		return app.appV1.CheckTx(tx)
+		return app.appV1.CheckTx(req)
 	}
 }
 
-func (app *DIDApplicationInterface) DeliverTx(tx []byte) types.ResponseDeliverTx {
+func (app *DIDApplicationInterface) DeliverTx(req types.RequestDeliverTx) types.ResponseDeliverTx {
 	switch {
 	case app.CurrentBlock >= 0:
-		return app.appV1.DeliverTx(tx)
+		return app.appV1.DeliverTx(req)
 	default:
-		return app.appV1.DeliverTx(tx)
+		return app.appV1.DeliverTx(req)
 	}
 }
 
